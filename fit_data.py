@@ -9,11 +9,9 @@ from pytorch3d.ops import sample_points_from_meshes
 from pytorch3d.structures import Meshes
 import dataset_location
 import torch
+import imageio
 
-
-
-
-
+from visualize import render_turntable
 
 def get_args_parser():
     parser = argparse.ArgumentParser('Model Fit', add_help=False)
@@ -106,6 +104,11 @@ def fit_voxel(voxels_src, voxels_tgt, args):
 
         print("[%4d/%4d]; ttime: %.0f (%.2f); loss: %.3f" % (step, args.max_iter, total_time,  iter_time, loss_vis))
     
+    vg_src = render_turntable(voxels_src)
+    vg_target = render_turntable(voxels_src)
+    imageio.mimsave('q11_vg_src.gif', vg_src, fps=30)
+    imageio.mimsave('q11_vg_target.gif', vg_target, fps=30)
+
     print('Done!')
 
 
