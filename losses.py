@@ -1,5 +1,5 @@
 import torch
-import pytorch3d
+import pytorch3d.loss
 import torch.nn as nn
 
 # define losses
@@ -23,15 +23,12 @@ def chamfer_loss(point_cloud_src,point_cloud_tgt):
 	loss_src_tgt, _, _ = pytorch3d.ops.knn_points(point_cloud_src, point_cloud_tgt, None, None, norm = 2, K=1)
 	loss_tgt_src, _, _ = pytorch3d.ops.knn_points(point_cloud_tgt, point_cloud_src, None, None, norm = 2, K=1)
 
-	# print('loss_tgt_src: ', loss_tgt_src.shape)
-	
 	loss_chamfer = torch.sum(loss_src_tgt) + torch.sum(loss_tgt_src)
 
-	# loss_chamfer
-	# implement chamfer loss from scratch
 	return loss_chamfer
 
 def smoothness_loss(mesh_src):
-	loss_laplacian = None 
+	loss_laplacian = pytorch3d.loss.mesh_laplacian_smoothing(mesh_src) 
 	# implement laplacian smoothening loss
+	
 	return loss_laplacian

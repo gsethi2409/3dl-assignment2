@@ -11,7 +11,9 @@ import dataset_location
 import torch
 import imageio
 
-from visualize import render_turntable_pointcloud, render_turntable_voxelgrid
+from visualize import render_turntable_pointcloud, \
+                      render_turntable_voxelgrid, \
+                      render_turntable_mesh
 
 def get_args_parser():
     parser = argparse.ArgumentParser('Model Fit', add_help=False)
@@ -29,13 +31,20 @@ def fit_mesh(mesh_src, mesh_tgt, args):
     start_iter = 0
     start_time = time.time()
 
+    m = render_turntable_mesh(mesh_tgt)
+    imageio.mimsave('q13_mesh_tgt.gif', m, fps=30)
+
     deform_vertices_src = torch.zeros(mesh_src.verts_packed().shape, requires_grad=True, device='cuda')
     optimizer = torch.optim.Adam([deform_vertices_src], lr = args.lr)
     print("Starting training !")
     for step in range(start_iter, args.max_iter):
         iter_start_time = time.time()
-
         new_mesh_src = mesh_src.offset_verts(deform_vertices_src)
+
+        if(step%3000==0):
+            m = render_turntable_mesh(new_mesh_src)
+            imageio.mimsave(str(step)+'_q13_mesh_src.gif', m, fps=30)
+
 
         sample_trg = sample_points_from_meshes(mesh_tgt, args.n_points)
         sample_src = sample_points_from_meshes(new_mesh_src, args.n_points)
@@ -57,6 +66,10 @@ def fit_mesh(mesh_src, mesh_tgt, args):
         print("[%4d/%4d]; ttime: %.0f (%.2f); loss: %.3f" % (step, args.max_iter, total_time,  iter_time, loss_vis))        
     
     mesh_src.offset_verts_(deform_vertices_src)
+
+    m = render_turntable_mesh(mesh_src)
+    imageio.mimsave('q13_mesh_optim.gif', m, fps=30)
+
 
     print('Done!')
 
@@ -99,7 +112,6 @@ def fit_voxel(voxels_src, voxels_tgt, args):
 
     # vg_src_opt = render_turntable_voxelgrid(voxels_src)
     # imageio.mimsave('q11_vg_src_before_optim.gif', vg_src_opt, fps=30)
-
 
     start_iter = 0
     start_time = time.time()    
