@@ -11,7 +11,7 @@ import dataset_location
 import torch
 import imageio
 
-from visualize import render_turntable
+from visualize import render_turntable_pointcloud, render_turntable_voxelgrid
 
 def get_args_parser():
     parser = argparse.ArgumentParser('Model Fit', add_help=False)
@@ -62,10 +62,16 @@ def fit_mesh(mesh_src, mesh_tgt, args):
 
 
 def fit_pointcloud(pointclouds_src, pointclouds_tgt, args):
+
     start_iter = 0
     start_time = time.time()    
     optimizer = torch.optim.Adam([pointclouds_src], lr = args.lr)
     for step in range(start_iter, args.max_iter):
+
+        if(step%3000==0):
+            pc_src = render_turntable_pointcloud(pointclouds_src)
+            imageio.mimsave(str(step)+'_q12_pc_src.gif',    pc_src, fps=30)
+
         iter_start_time = time.time()
 
         loss = losses.chamfer_loss(pointclouds_src, pointclouds_tgt)
@@ -81,10 +87,20 @@ def fit_pointcloud(pointclouds_src, pointclouds_tgt, args):
 
         print("[%4d/%4d]; ttime: %.0f (%.2f); loss: %.3f" % (step, args.max_iter, total_time,  iter_time, loss_vis))
     
+    pc_src = render_turntable_pointcloud(pointclouds_src)
+    pc_target = render_turntable_pointcloud(pointclouds_tgt)
+    imageio.mimsave('q12_pc_src.gif',    pc_src, fps=30)
+    imageio.mimsave('q12_pc_target.gif', pc_target, fps=30)
+
     print('Done!')
 
 
 def fit_voxel(voxels_src, voxels_tgt, args):
+
+    # vg_src_opt = render_turntable_voxelgrid(voxels_src)
+    # imageio.mimsave('q11_vg_src_before_optim.gif', vg_src_opt, fps=30)
+
+
     start_iter = 0
     start_time = time.time()    
     optimizer = torch.optim.Adam([voxels_src], lr = args.lr)
@@ -104,10 +120,10 @@ def fit_voxel(voxels_src, voxels_tgt, args):
 
         print("[%4d/%4d]; ttime: %.0f (%.2f); loss: %.3f" % (step, args.max_iter, total_time,  iter_time, loss_vis))
     
-    vg_src = render_turntable(voxels_src)
-    vg_target = render_turntable(voxels_src)
-    imageio.mimsave('q11_vg_src.gif', vg_src, fps=30)
-    imageio.mimsave('q11_vg_target.gif', vg_target, fps=30)
+    # vg_src = render_turntable_voxelgrid(voxels_src)
+    # vg_target = render_turntable_voxelgrid(voxels_src)
+    # imageio.mimsave('q11_vg_src.gif', vg_src, fps=30)
+    # imageio.mimsave('q11_vg_target.gif', vg_target, fps=30)
 
     print('Done!')
 

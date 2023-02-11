@@ -11,13 +11,32 @@ grid.
 
 Command: 
 
-`python fit_data.py --type 'vox' --max-iter 30000`
+`python fit_data.py --type 'vox' --max-iter 25000`
 
 
-| Ground Truth Voxel Grid | Optimized Voxel Grid |
+| Source Voxel Grid | Ground Truth Voxel Grid | Optimized Voxel Grid |
+| --- | --- | --- |
+| <img src="results/q11_vg_src_before_optim.gif"> | <img src="results/q11_vg_target.gif"> | <img src="results/q11_vg_src.gif"> |
+
+
+(##) 1.2. Fitting a PointCloud
+
+The goal is to implement the chamfer loss function to help fit a 3D pointcloud. 
+
+Command: 
+
+`python fit_data.py --type 'point' --max-iter 12000`
+
+
+| Source Pointcloud | Ground Truth Pointcloud | 
 | --- | --- |
-| <img src="results/q11_vg_target.gif"> | <img src="results/q11_vg_src.gif"> |
+| <img src="results/0_q12_pc_src.gif"> | <img src="results/q12_pc_target.gif"> |
 
+
+
+| 3k Iters | 6k Iters | 9k Iters | 12k Iters |
+| --- | --- | --- |--- |
+| <img src="results/3000_q12_pc_src.gif"> | <img src="results/6000_q12_pc_src.gif"> | <img src="results/9000_q12_pc_src.gif"> | <img src="results/12000_q12_pc_src.gif"> |
 
 
 

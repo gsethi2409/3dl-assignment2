@@ -3,11 +3,41 @@ import imageio
 import pytorch3d
 import numpy as np
 
-from utils import get_device, get_mesh_renderer
+from utils import get_device, get_mesh_renderer, get_points_renderer
 
 import matplotlib.pyplot as plt
 
-def render_turntable(
+def render_turntable_pointcloud(
+        pointcloud, image_size=256, device=None,
+):
+
+    if device is None:
+        device = get_device()
+
+    renderer = get_points_renderer(
+        image_size=256, background_color=(1, 1, 1)
+    )
+
+    verts = torch.Tensor(pointcloud).to(device)
+    rgb = torch.rand(pointcloud.shape).to(device)
+    point_cloud = pytorch3d.structures.Pointclouds(points=verts, features=rgb)
+    
+    angles = np.linspace(0, 360)
+    pc = []
+
+    for a in angles:
+        R, T = pytorch3d.renderer.look_at_view_transform(2, 10, a)
+        R = R @ torch.tensor([[1, 0, 0], [0, 1, 0], [0, 0, 1]]).float()
+        cameras = pytorch3d.renderer.FoVPerspectiveCameras(R=R, T=T, device=device)
+        rend = renderer(point_cloud, cameras=cameras)
+        
+        rend = rend.cpu().detach().numpy()[0, ..., :3]  # (B, H, W, 4) -> (H, W, 3)
+
+        pc.append(rend)
+
+    return pc
+
+def render_turntable_voxelgrid(
     voxels, image_size=256, device=None,
 ):
 
