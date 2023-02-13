@@ -22,7 +22,7 @@ class SingleViewto3D(nn.Module):
             # Output: b x 32 x 32 x 32
             pass
             # TODO:
-            # self.decoder =             
+            self.decoder = nn.ConvTranspose2d(512, 32, kernel_size=32)
         elif args.type == "point":
             # Input: b x 512
             # Output: b x args.n_points x 3  
@@ -48,14 +48,16 @@ class SingleViewto3D(nn.Module):
 
         if not args.load_feat:
             images_normalize = self.normalize(images.permute(0,3,1,2))
-            encoded_feat = self.encoder(images_normalize).squeeze(-1).squeeze(-1) # b x 512
+            encoded_feat = self.encoder(images_normalize)
+            # .squeeze(-1).squeeze(-1) # b x 512
         else:
             encoded_feat = images # in case of args.load_feat input images are pretrained resnet18 features of b x 512 size
 
         # call decoder
         if args.type == "vox":
             # TODO:
-            # voxels_pred =             
+            voxels_pred = self.decoder(encoded_feat) 
+            voxels_pred = voxels_pred.unsqueeze(1)         
             return voxels_pred
 
         elif args.type == "point":

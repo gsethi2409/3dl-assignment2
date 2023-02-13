@@ -8,6 +8,10 @@ import dataset_location
 from pytorch3d.ops import sample_points_from_meshes
 import losses
 
+import imageio
+from visualize import render_turntable_pointcloud, \
+                      render_turntable_voxelgrid, \
+                      render_turntable_mesh
 
 def get_args_parser():
     parser = argparse.ArgumentParser('Singleto3D', add_help=False)
@@ -128,6 +132,18 @@ def train_model(args):
 
         print("[%4d/%4d]; ttime: %.0f (%.2f, %.2f); loss: %.3f" % (step, args.max_iter, total_time, read_time, iter_time, loss_vis))
 
+
+        if(step%1000==0):
+            vg_src = render_turntable_voxelgrid(prediction_3d)
+            vg_target = render_turntable_voxelgrid(ground_truth_3d)
+            imageio.mimsave(str(step)+'_q21_vg_src.gif', vg_src, fps=30)
+            imageio.mimsave(str(step)+'_q21_vg_target.gif', vg_target, fps=30)
+
+
+    vg_src = render_turntable_voxelgrid(prediction_3d)
+    vg_target = render_turntable_voxelgrid(ground_truth_3d)
+    imageio.mimsave('q21_vg_src.gif', vg_src, fps=30)
+    imageio.mimsave('q21_vg_target.gif', vg_target, fps=30)
     print('Done!')
 
 if __name__ == '__main__':
