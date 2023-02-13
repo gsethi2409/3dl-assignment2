@@ -57,7 +57,8 @@ class SingleViewto3D(nn.Module):
         if args.type == "vox":
             # TODO:
             voxels_pred = self.decoder(encoded_feat) 
-            voxels_pred = voxels_pred.unsqueeze(1)         
+            voxels_pred = voxels_pred.squeeze()
+            print('voxels_pred.shape: ', voxels_pred.shape)    
             return voxels_pred
 
         elif args.type == "point":
