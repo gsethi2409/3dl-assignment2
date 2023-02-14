@@ -6,15 +6,11 @@ import torch.nn as nn
 def voxel_loss(voxel_src,voxel_tgt):
 	# voxel_src: b x h x w x d
 	# voxel_tgt: b x h x w x d
-	# loss = 
 	# implement some loss for binary voxel grids
 
 	m = nn.Sigmoid()
 	loss = nn.BCELoss()
 	output = loss(m(voxel_src), voxel_tgt)
-	print(output.shape)
-	print(output)
-
 	return output
 
 def chamfer_loss(point_cloud_src,point_cloud_tgt):
