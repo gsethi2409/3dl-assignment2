@@ -22,13 +22,20 @@ class SingleViewto3D(nn.Module):
             # Output: b x 32 x 32 x 32
             pass
             # TODO:
-            self.decoder = nn.ConvTranspose2d(512, 32, kernel_size=32)
+            # self.decoder = nn.ConvTranspose3d(512, 1, kernel_size=32, stride=1)
+            self.decoder = nn.Conv3d(512, 1, kernel_size=32, stride=1, padding=31)
         elif args.type == "point":
             # Input: b x 512
             # Output: b x args.n_points x 3  
             self.n_point = args.n_points
             # TODO:
-            # self.decoder =             
+            self.decoder = nn.Sequential(
+                # nn.Linear(512, 1024),
+                # nn.Tanh(),
+                # nn.Linear(1024, 2048),
+                # nn.Tanh(),
+                nn.Linear(512, (args.n_points * 3))
+            )          
         elif args.type == "mesh":
             # Input: b x 512
             # Output: b x mesh_pred.verts_packed().shape[0] x 3  
@@ -36,7 +43,7 @@ class SingleViewto3D(nn.Module):
             mesh_pred = ico_sphere(4, self.device)
             self.mesh_pred = pytorch3d.structures.Meshes(mesh_pred.verts_list()*args.batch_size, mesh_pred.faces_list()*args.batch_size)
             # TODO:
-            # self.decoder =             
+            self.decoder = nn.Linear(512, (mesh_pred.verts_packed().shape[0] * 3))
 
     def forward(self, images, args):
         results = dict()
@@ -56,19 +63,25 @@ class SingleViewto3D(nn.Module):
         # call decoder
         if args.type == "vox":
             # TODO:
+            print('encoded_feat.shape: ', encoded_feat.shape)
+            encoded_feat = encoded_feat.unsqueeze(-1)
+            print('encoded_feat.shape: ', encoded_feat.shape)
+
             voxels_pred = self.decoder(encoded_feat) 
-            voxels_pred = voxels_pred.squeeze()
             print('voxels_pred.shape: ', voxels_pred.shape)    
             return voxels_pred
 
         elif args.type == "point":
             # TODO:
-            # pointclouds_pred =             
+            pointclouds_pred = self.decoder(encoded_feat)
+            print('pointclouds_pred.shape: ', pointclouds_pred.shape)
+
+            pointclouds_pred = torch.reshape(pointclouds_pred, (args.batch_size, args.n_points, 3))
+            print('pointclouds_pred.shape: ', pointclouds_pred.shape)
             return pointclouds_pred
 
         elif args.type == "mesh":
             # TODO:
-            # deform_vertices_pred =             
+            deform_vertices_pred = self.decoder(encoded_feat)
             mesh_pred = self.mesh_pred.offset_verts(deform_vertices_pred.reshape([-1,3]))
             return  mesh_pred          
-

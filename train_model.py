@@ -8,6 +8,7 @@ import dataset_location
 from pytorch3d.ops import sample_points_from_meshes
 import losses
 
+import numpy as np
 import imageio
 from visualize import render_turntable_pointcloud, \
                       render_turntable_voxelgrid, \
@@ -17,16 +18,16 @@ def get_args_parser():
     parser = argparse.ArgumentParser('Singleto3D', add_help=False)
     # Model parameters
     parser.add_argument('--arch', default='resnet18', type=str)
-    parser.add_argument('--lr', default=4e-4, type=str)
+    parser.add_argument('--lr', default=4e-4, type=float)
     parser.add_argument('--max_iter', default=10000, type=str)
     parser.add_argument('--log_freq', default=1000, type=str)
-    parser.add_argument('--batch_size', default=2, type=str)
+    parser.add_argument('--batch_size', default=2, type=int)
     parser.add_argument('--num_workers', default=0, type=str)
     parser.add_argument('--type', default='vox', choices=['vox', 'point', 'mesh'], type=str)
     parser.add_argument('--n_points', default=5000, type=int)
     parser.add_argument('--w_chamfer', default=1.0, type=float)
     parser.add_argument('--w_smooth', default=0.1, type=float)
-    parser.add_argument('--save_freq', default=10000, type=int)    
+    parser.add_argument('--save_freq', default=1000, type=int)    
     parser.add_argument('--device', default='cuda', type=str) 
     parser.add_argument('--load_feat', action='store_true') 
     parser.add_argument('--load_checkpoint', action='store_true')            
@@ -89,6 +90,8 @@ def train_model(args):
     start_iter = 0
     start_time = time.time()
 
+    losses = []
+
     if args.load_checkpoint:
         checkpoint = torch.load(f'checkpoint_{args.type}.pth')
         model.load_state_dict(checkpoint['model_state_dict'])
@@ -128,22 +131,20 @@ def train_model(args):
                 'step': step,
                 'model_state_dict': model.state_dict(),
                 'optimizer_state_dict': optimizer.state_dict()
-                }, f'checkpoint_{args.type}.pth')
+                }, f'{step}_checkpoint_{args.type}.pth')
+
+            losses.append(loss_vis)
 
         print("[%4d/%4d]; ttime: %.0f (%.2f, %.2f); loss: %.3f" % (step, args.max_iter, total_time, read_time, iter_time, loss_vis))
 
+    torch.save({
+        'step': step,
+        'model_state_dict': model.state_dict(),
+        'optimizer_state_dict': optimizer.state_dict()
+        }, f'final_checkpoint_{args.type}.pth')
 
-        if(step%1000==0):
-            vg_src = render_turntable_voxelgrid(prediction_3d)
-            vg_target = render_turntable_voxelgrid(ground_truth_3d)
-            imageio.mimsave(str(step)+'_q21_vg_src.gif', vg_src, fps=30)
-            imageio.mimsave(str(step)+'_q21_vg_target.gif', vg_target, fps=30)
-
-
-    vg_src = render_turntable_voxelgrid(prediction_3d)
-    vg_target = render_turntable_voxelgrid(ground_truth_3d)
-    imageio.mimsave('q21_vg_src.gif', vg_src, fps=30)
-    imageio.mimsave('q21_vg_target.gif', vg_target, fps=30)
+    np.save("losses.npy", np.array(losses))
+    
     print('Done!')
 
 if __name__ == '__main__':

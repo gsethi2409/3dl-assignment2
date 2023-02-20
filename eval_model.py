@@ -12,10 +12,18 @@ import mcubes
 import utils_vox
 import matplotlib.pyplot as plt 
 
+import numpy as np
+import imageio
+from visualize import render_turntable_pointcloud, \
+                      render_turntable_voxelgrid, \
+                      render_turntable_mesh
+
+
 def get_args_parser():
     parser = argparse.ArgumentParser('Singleto3D', add_help=False)
     parser.add_argument('--arch', default='resnet18', type=str)
     parser.add_argument('--max_iter', default=10000, type=str)
+    parser.add_argument('--eval_iter', default=1000, type=str)
     parser.add_argument('--vis_freq', default=1000, type=str)
     parser.add_argument('--batch_size', default=1, type=str)
     parser.add_argument('--num_workers', default=0, type=str)
@@ -45,8 +53,8 @@ def save_plot(thresholds, avg_f1_score, args):
     ax.plot(thresholds, avg_f1_score, marker='o')
     ax.set_xlabel('Threshold')
     ax.set_ylabel('F1-score')
-    ax.set_title(f'Evaluation {args.type}')
-    plt.savefig(f'eval_{args.type}', bbox_inches='tight')
+    ax.set_title(f'Evaluation {args.type} @{args.eval_iter} Iters')
+    plt.savefig(f'eval_{args.type}_{args.eval_iter}', bbox_inches='tight')
 
 
 def compute_sampling_metrics(pred_points, gt_points, thresholds, eps=1e-8):
@@ -59,6 +67,7 @@ def compute_sampling_metrics(pred_points, gt_points, thresholds, eps=1e-8):
     )
 
     # For each predicted point, find its neareast-neighbor GT point
+    print('pred_points, gt_points: ', pred_points.shape, gt_points.shape)
     knn_pred = knn_points(pred_points, gt_points, lengths1=lengths_pred, lengths2=lengths_gt, K=1)
     # Compute L1 and L2 distances between each pred point and its nearest GT
     pred_to_gt_dists2 = knn_pred.dists[..., 0]  # (N, S)
@@ -91,8 +100,14 @@ def evaluate(predictions, mesh_gt, thresholds, args):
         vertices_src = torch.tensor(vertices_src).float()
         faces_src = torch.tensor(faces_src.astype(int))
         mesh_src = pytorch3d.structures.Meshes([vertices_src], [faces_src])
-        pred_points = sample_points_from_meshes(mesh_src, args.n_points)
-        pred_points = utils_vox.Mem2Ref(pred_points, H, W, D)
+        
+        try:
+            pred_points = sample_points_from_meshes(mesh_src, args.n_points)
+            pred_points = utils_vox.Mem2Ref(pred_points, H, W, D)
+
+        except:
+            return
+
     elif args.type == "point":
         pred_points = predictions.cpu()
     elif args.type == "mesh":
@@ -132,7 +147,7 @@ def evaluate_model(args):
     avg_r_score = []
 
     if args.load_checkpoint:
-        checkpoint = torch.load(f'checkpoint_{args.type}.pth')
+        checkpoint = torch.load(f'{args.eval_iter}_checkpoint_{args.type}.pth')
         model.load_state_dict(checkpoint['model_state_dict'])
         print(f"Succesfully loaded iter {start_iter}")
     
@@ -152,16 +167,41 @@ def evaluate_model(args):
         predictions = model(images_gt, args)
 
         if args.type == "vox":
+
             predictions = predictions.permute(0,1,4,3,2)
 
         metrics = evaluate(predictions, mesh_gt, thresholds, args)
 
+        if(metrics is None):
+            print("No points, skipping this sample..")
+            continue
+
         # TODO:
-        # if (step % args.vis_freq) == 0:
-        #     # visualization block
-        #     #  rend = 
-        #     plt.imsave(f'vis/{step}_{args.type}.png', rend)
+        if (step % int(args.vis_freq)) == 0:
+            # print(predictions.shape)
+
+            if args.type == "vox":
+                p = predictions.squeeze(0)
+                pview = render_turntable_voxelgrid(p)
+                gtview = render_turntable_mesh(mesh_gt)
+
+            # visualization block
+            #  rend = 
+            # plt.imsave(f'{step}_{args.type}.png', images_gt.cpu())
       
+
+            if args.type == "point":
+                pview = render_turntable_pointcloud(predictions)
+                gtview = render_turntable_mesh(mesh_gt)
+
+
+            if args.type == "mesh":
+                pview = render_turntable_mesh(predictions)
+                gtview = render_turntable_mesh(mesh_gt)
+
+            imageio.mimsave(str(args.eval_iter) + '_' + str(step)+'_pred_eval.gif', pview, fps=30)
+            imageio.mimsave(str(args.eval_iter) + '_' + str(step)+'_gt_eval.gif', gtview, fps=30)
+
 
         total_time = time.time() - start_time
         iter_time = time.time() - iter_start_time

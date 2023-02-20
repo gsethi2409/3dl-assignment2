@@ -9,6 +9,7 @@ Gunjan Sethi: gunjans@andrew.cmu.edu
  - [Fitting a Voxel Grid](#q11)  
  - [Fitting a Pointcloud](#q12) 
  - [Fitting a a Mesh](#q13)
+ - [Reconstructing 3D from SingleView: Image to Voxel Grid](#q23)
 
 
 (#) Exploring Loss Functions
@@ -68,6 +69,23 @@ Command:
 | 3k Iters | 6k Iters | 9k Iters | Optimized |
 | --- | --- | --- |--- |
 | <img src="results/3000_q13_mesh_src.gif"> | <img src="results/6000_q13_mesh_src.gif"> | <img src="results/9000_q13_mesh_src.gif"> | <img src="results/q13_mesh_optim.gif"> |
+
+
+(#) Reconstructing 3D from Single View
+
+The goal is to train a single view to 3D pipeline for voxels, pointclouds and meshes. 
+
+<a name="q21">
+(##) 2.1. Image to Voxel Grid
+
+(###) Single ConvTranspose3D Layer
+
+`nn.ConvTranspose3d(512, 1, kernel_size=32, stride=1)`
+
+| Groudtruth Mesh | Predicted Mesh |
+| -- | -- |
+| <img src="results/q2/q21/exp4/final_300_gt_eval_vox.gif"> | <img src="results/q2/q21/exp4/final_300_pred_eval_vox.gif"> | 
+| <img src="results/q2/q21/exp4/final_400_gt_eval_vox.gif"> | <img src="results/q2/q21/exp4/final_400_pred_eval_vox.gif"> | 
 
 
 
