@@ -187,7 +187,7 @@ def evaluate_model(args):
 
             # visualization block
             #  rend = 
-            # plt.imsave(f'{step}_{args.type}.png', images_gt.cpu())
+            plt.imsave(f'{step}_{args.type}.png', images_gt.squeeze(). detach().cpu().numpy())
       
 
             if args.type == "point":
