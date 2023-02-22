@@ -20,22 +20,53 @@ class SingleViewto3D(nn.Module):
         if args.type == "vox":
             # Input: b x 512
             # Output: b x 32 x 32 x 32
-            pass
             # TODO:
-            # self.decoder = nn.ConvTranspose3d(512, 1, kernel_size=32, stride=1)
-            self.decoder = nn.Conv3d(512, 1, kernel_size=32, stride=1, padding=31)
+
+            self.decoder = nn.ConvTranspose3d(512, 1, kernel_size=32, stride=1)
+            # self.decoder = nn.Conv3d(512, 1, kernel_size=32, stride=1, padding=31)
+        
+            # self.layer1 = torch.nn.Sequential(
+            #     torch.nn.ConvTranspose3d(512, 128, kernel_size=8, stride=2, padding=1),
+            #     torch.nn.BatchNorm3d(128),
+            # )
+            # self.layer2 = torch.nn.Sequential(
+            #     torch.nn.ConvTranspose3d(128, 32, kernel_size=8, stride=2, padding=1),
+            #     torch.nn.BatchNorm3d(32),
+            # )
+            # self.layer3 = torch.nn.Sequential(
+            #     torch.nn.ConvTranspose3d(32, 8, kernel_size=4, stride=2, padding=1),
+            #     torch.nn.BatchNorm3d(8),
+            # )
+            # self.layer4 = torch.nn.Sequential(
+            #     torch.nn.ConvTranspose3d(8, 1, kernel_size=1),
+            # )
+
+            # self.decoder = nn.Sequential(nn.Flatten(),
+            #                      nn.Linear(512, 2048),
+            #                      nn.ReLU(),
+            #                      nn.Linear(2048, 8192),
+            #                      nn.ReLU(),
+            #                      nn.Linear(8192, 32768))
+        
+        
         elif args.type == "point":
             # Input: b x 512
             # Output: b x args.n_points x 3  
             self.n_point = args.n_points
-            # TODO:
+
+            # self.decoder = nn.Linear(512, (args.n_points * 3))
             self.decoder = nn.Sequential(
-                # nn.Linear(512, 1024),
-                # nn.Tanh(),
-                # nn.Linear(1024, 2048),
-                # nn.Tanh(),
                 nn.Linear(512, (args.n_points * 3))
-            )          
+            )  
+
+
+            # self.decoder = nn.Sequential(nn.Flatten(),
+            #                     nn.Linear(512, 1024),
+            #                     nn.ReLU(),
+            #                     nn.Linear(1024, 4096),
+            #                     nn.ReLU(),
+            #                     nn.Linear(4096, self.n_point * 3))
+
         elif args.type == "mesh":
             # Input: b x 512
             # Output: b x mesh_pred.verts_packed().shape[0] x 3  
@@ -43,7 +74,16 @@ class SingleViewto3D(nn.Module):
             mesh_pred = ico_sphere(4, self.device)
             self.mesh_pred = pytorch3d.structures.Meshes(mesh_pred.verts_list()*args.batch_size, mesh_pred.faces_list()*args.batch_size)
             # TODO:
-            self.decoder = nn.Linear(512, (mesh_pred.verts_packed().shape[0] * 3))
+            # self.decoder = nn.Linear(512, (mesh_pred.verts_packed().shape[0] * 3))
+
+
+            # self.decoder = nn.Sequential(nn.Flatten(),
+            #                     nn.Linear(512, 1024),
+            #                     nn.ReLU(),
+            #                     nn.Linear(1024, 4096),
+            #                     nn.ReLU(),
+            #                     nn.Linear(4096, mesh_pred.verts_packed().shape[0] * 3))
+
 
     def forward(self, images, args):
         results = dict()
@@ -67,8 +107,16 @@ class SingleViewto3D(nn.Module):
             encoded_feat = encoded_feat.unsqueeze(-1)
             print('encoded_feat.shape: ', encoded_feat.shape)
 
-            voxels_pred = self.decoder(encoded_feat) 
-            print('voxels_pred.shape: ', voxels_pred.shape)    
+            # voxels_pred = self.decoder(encoded_feat) 
+
+            # voxels_pred = self.layer1(encoded_feat)
+            # voxels_pred = self.layer2(voxels_pred)
+            # voxels_pred = self.layer3(voxels_pred)
+            # voxels_pred = self.layer4(voxels_pred)
+            
+            voxels_pred = self.decoder(encoded_feat)
+            voxels_pred = torch.reshape(voxels_pred, (args.batch_size, 1, 32, 32, 32))
+
             return voxels_pred
 
         elif args.type == "point":

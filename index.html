@@ -80,11 +80,11 @@ The goal is to train a single view to 3D pipeline for voxels, pointclouds and me
 
 (###) Single ConvTranspose3D Layer
 
-Trained for 10k iters.
+Trained for 10k iters with batch size 2.
 
 `nn.ConvTranspose3d(512, 1, kernel_size=32, stride=1)`
 
-| Images | Groudtruth Mesh | Predicted Mesh |
+| Images | Groudtruth Mesh | Predicted Vox |
 | -- | -- | -- |
 | <img src="results/140_vox.png"> | <img src="results/q2/q21/exp4/final_140_gt_eval.gif"> | <img src="results/q2/q21/exp4/final_140_pred_eval.gif"> | 
 | <img src="results/image_300_point.png"> | <img src="results/q2/q21/exp4/final_300_gt_eval_vox.gif"> | <img src="results/q2/q21/exp4/final_300_pred_eval_vox.gif"> | 
@@ -93,7 +93,7 @@ Trained for 10k iters.
 
 (###) 4-Layer ConvTranspose3D Model 
 
-This decoder model is inspired by Pix2Vox. Trained for 9k iters.
+This decoder model is inspired by Pix2Vox. Trained for 9k iters with batch size 64.
 
 ```
 self.layer1 = torch.nn.Sequential(
@@ -113,12 +113,157 @@ self.layer4 = torch.nn.Sequential(
 )
 ```
 
-| Images | Groudtruth Mesh | Predicted Mesh |
+| Images | Groudtruth Mesh | Predicted Vox |
 | -- | -- | -- |
-| <img src="results/140_vox.png">  |        <img src="results/q2/q21/exp2/9000_140_gt_eval.gif"> | <img src="results/q2/q21/exp2/9000_140_pred_eval.gif"> | 
-| <img src="results/image_300_point.png"> | <img src="results/q2/q21/exp2/9000_300_gt_eval_vox.gif"> | <img src="results/q2/q21/exp2/9000_300_pred_eval_vox.gif"> | 
-| <img src="results/image_400_mesh.png"> | <img src="results/q2/q21/exp2/9000_400_gt_eval_vox.gif"> | <img src="results/q2/q21/exp2/9000_400_pred_eval_vox.gif"> | 
+| <img src="results/q2/q21/exp13/0_vox.png"> | <img src="results/q2/q21/exp13/7000_0_gt_eval.gif"> |   <img src="results/q2/q21/exp13/7000_0_pred_eval.gif"> | 
+| <img src="results/q2/q22/exp6/140_point.png"> | <img src="results/q2/q21/exp13/7000_140_gt_eval.gif"> | <img src="results/q2/q21/exp13/7000_140_pred_eval.gif"> | 
+| <img src="results/q2/q22/exp6/420_point.png"> | <img src="results/q2/q21/exp13/7000_420_gt_eval.gif"> | <img src="results/q2/q21/exp13/7000_420_pred_eval.gif"> | 
 
+
+(###) 4 FC Layers
+
+Trained for 8k iterations with 64 batch size.
+
+```
+nn.Sequential(
+    nn.Linear(512, 2048),
+    nn.ReLU(),
+    nn.Linear(2048, 8192),
+    nn.ReLU(),
+    nn.Linear(8192, (32 * 32 * 32))
+)
+
+```
+
+| Images | Groudtruth Mesh | Predicted Vox |
+| -- | -- | -- |
+| <img src="results/q2/q21/exp13/0_vox.png"> | <img src="results/q2/q21/exp12/7000_0_gt_eval.gif"> |   <img src="results/q2/q21/exp12/7000_0_pred_eval.gif"> | 
+| <img src="results/q2/q22/exp6/140_point.png"> | <img src="results/q2/q21/exp12/7000_140_gt_eval.gif"> | <img src="results/q2/q21/exp12/7000_140_pred_eval.gif"> | 
+| <img src="results/q2/q22/exp6/420_point.png"> | <img src="results/q2/q21/exp12/7000_420_gt_eval.gif"> | <img src="results/q2/q21/exp12/7000_420_pred_eval.gif"> | 
+
+
+
+<a name="q22">
+(##) 2.2. Image to Pointcloud - Ablations
+
+Decoder Model
+
+(###) Single FC Layer
+
+Trained for 10k iters with 2 batch size.
+
+```
+nn.Linear(512, (args.n_points * 3))
+```
+
+| Images | Groudtruth Mesh | Predicted Pointcloud |
+| -- | -- | -- |
+| <img src="results/q2/q22/exp6/100_point.png"> | <img src="results/q2/q22/exp6/final_100_gt_eval.gif"> | <img src="results/q2/q22/exp6/final_100_pred_eval.gif"> | 
+| <img src="results/q2/q22/exp6/140_point.png"> | <img src="results/q2/q22/exp6/final_140_gt_eval.gif"> | <img src="results/q2/q22/exp6/final_140_pred_eval.gif"> | 
+| <img src="results/q2/q22/exp6/420_point.png"> | <img src="results/q2/q22/exp6/final_420_gt_eval.gif"> | <img src="results/q2/q22/exp6/final_420_pred_eval.gif"> | 
+
+
+
+(###) 3-Layer FC Decoder
+
+Trained for 10k iters with 64 batch size.
+
+```
+nn.Sequential(
+    
+    nn.Linear(512, 1024),
+    nn.ReLU(),
+
+    nn.Linear(1024, 4096),
+    nn.ReLU(),
+
+    nn.Linear(4096, (args.n_point * 3))
+    )
+
+```
+
+| Images | Groudtruth Mesh | Predicted Pointcloud |
+| -- | -- | -- |
+| <img src="results/q2/q22/exp10/100_point.png"> | <img src="results/q2/q22/exp10/final_100_gt_eval.gif"> | <img src="results/q2/q22/exp10/final_100_pred_eval.gif"> | 
+| <img src="results/q2/q22/exp10/140_point.png"> | <img src="results/q2/q22/exp10/final_140_gt_eval.gif"> | <img src="results/q2/q22/exp10/final_140_pred_eval.gif"> | 
+| <img src="results/q2/q22/exp10/420_point.png"> | <img src="results/q2/q22/exp10/final_420_gt_eval.gif"> | <img src="results/q2/q22/exp10/final_420_pred_eval.gif"> | 
+
+
+<a name="q23">
+(##) 2.3. Image to Mesh - Ablations
+
+
+(###) 3-Layer FC Decoder
+
+Train for 7k iterations with 64 batch size. 
+
+
+```
+nn.Sequential(
+    
+    nn.Linear(512, 1024),
+    nn.ReLU(),
+
+    nn.Linear(1024, 4096),
+    nn.ReLU(),
+
+    nn.Linear(4096, mesh_pred.verts_packed().shape[0] * 3)
+
+    )
+
+```
+
+
+| Images | Groudtruth Mesh | Predicted Pointcloud |
+| -- | -- | -- |
+| <img src="results/q2/q23/exp11/0_mesh.png"> | <img src="results/q2/q23/exp11/7000_0_gt_eval.gif"> | <img src="results/q2/q23/exp11/7000_0_pred_eval.gif"> | 
+| <img src="results/q2/q23/exp11/140_mesh.png"> | <img src="results/q2/q23/exp11/7000_140_gt_eval.gif"> | <img src="results/q2/q23/exp11/7000_140_pred_eval.gif"> | 
+| <img src="results/q2/q23/exp11/420_mesh.png"> | <img src="results/q2/q23/exp11/7000_420_gt_eval.gif"> | <img src="results/q2/q23/exp11/7000_420_pred_eval.gif"> | 
+
+
+<a name="q24">
+(##) 2.4. Quantitative Comparisons
+
+
+<a name="q25">
+(##) 2.5. Hyperparameter Variations
+
+(###) Voxel Predictions
+
+
+
+(###) Pointcloud Predictions
+
+Varying batch size from 2 to 64 boosted the F1 score by 5%. The model trained with a larger
+batch size can better capture nuances in the chair stucture, for example, the structure of the 
+chair legs as shown in the below example.
+
+
+| Groundtruth | Trained with batchsize = 2 | Trained with batchsize = 64 |
+| -- | -- | -- |
+| <img src="results/q2/q25/final_0_gt_eval.gif"> | <img src="results/q2/q25/final_0_pred_eval_b2.gif"> | <img src="results/q2/q25/final_0_pred_eval_b64.gif"> |  
+
+
+Further, the number of predicted points does not change the model performance beyond 5000.
+With 1000 points, the F1 score is around 70 but boosts to 90+ with 5000 points. Below models are 
+trained with batch size 2.
+
+| Groundtruth | n_points = 1000 | n_points = 5000 | n_points = 10000 |
+| -- | -- | -- | -- |
+| <img src="results/q2/q25/final_0_gt_eval.gif"> | <img src="results/q2/q25/final_0_pred_eval_n1000.gif"> | <img src="results/q2/q25/final_0_pred_eval_b2.gif"> |  <img src="results/q2/q25/final_0_pred_eval_n10k.gif"> |  
+
+
+(###) Mesh Predictions
+
+
+<a name="q26">
+(##) 2.6. Model Interpretation
+
+(###) Mesh Deformations Through Iterations
+
+| Sample 0 | Sample 140 |
+| -- | -- |
+| <img src="results/q2/q26/q26_0.gif"> | <img src="results/q2/q26/q26_140.gif"> |  
 
 
 <!--- Markdeep & image comparison library - probably no need to change anything below -->

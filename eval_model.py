@@ -121,6 +121,9 @@ def evaluate(predictions, mesh_gt, thresholds, args):
 
 
 def evaluate_model(args):
+    
+    q26 = []
+
     r2n2_dataset = R2N2("test", dataset_location.SHAPENET_PATH, dataset_location.R2N2_PATH, dataset_location.SPLITS_PATH, return_voxels=True, return_feats=args.load_feat)
 
     loader = torch.utils.data.DataLoader(
@@ -178,29 +181,26 @@ def evaluate_model(args):
 
         # TODO:
         if (step % int(args.vis_freq)) == 0:
-            # print(predictions.shape)
+
+            plt.imsave(f'{step}_{args.type}.png', images_gt.squeeze(). detach().cpu().numpy())
+            gtview = render_turntable_mesh(mesh_gt)
+
 
             if args.type == "vox":
                 p = predictions.squeeze(0)
                 pview = render_turntable_voxelgrid(p)
-                gtview = render_turntable_mesh(mesh_gt)
 
-            # visualization block
-            #  rend = 
-            plt.imsave(f'{step}_{args.type}.png', images_gt.squeeze(). detach().cpu().numpy())
       
-
             if args.type == "point":
                 pview = render_turntable_pointcloud(predictions)
-                gtview = render_turntable_mesh(mesh_gt)
-
-
+                
             if args.type == "mesh":
                 pview = render_turntable_mesh(predictions)
-                gtview = render_turntable_mesh(mesh_gt)
+                # plt.imsave(f'results/q2/q26/{args.eval_iter}_{step}_{args.type}_view.png', pview[10])
+                
 
-            imageio.mimsave(str(args.eval_iter) + '_' + str(step)+'_pred_eval.gif', pview, fps=30)
-            imageio.mimsave(str(args.eval_iter) + '_' + str(step)+'_gt_eval.gif', gtview, fps=30)
+            # imageio.mimsave(str(args.eval_iter) + '_' + str(step)+'_pred_eval.gif', pview, fps=30)
+            # imageio.mimsave(str(args.eval_iter) + '_' + str(step)+'_gt_eval.gif', gtview, fps=30)
 
 
         total_time = time.time() - start_time
@@ -218,6 +218,8 @@ def evaluate_model(args):
     avg_f1_score = torch.stack(avg_f1_score).mean(0)
 
     save_plot(thresholds, avg_f1_score,  args)
+
+
     print('Done!')
 
 if __name__ == '__main__':
