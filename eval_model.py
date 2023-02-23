@@ -54,7 +54,7 @@ def save_plot(thresholds, avg_f1_score, args):
     ax.set_xlabel('Threshold')
     ax.set_ylabel('F1-score')
     ax.set_title(f'Evaluation {args.type} @{args.eval_iter} Iters')
-    plt.savefig(f'eval_{args.type}_{args.eval_iter}', bbox_inches='tight')
+    plt.savefig(f'eval_{args.type}', bbox_inches='tight')
 
 
 def compute_sampling_metrics(pred_points, gt_points, thresholds, eps=1e-8):
@@ -182,13 +182,14 @@ def evaluate_model(args):
         # TODO:
         if (step % int(args.vis_freq)) == 0:
 
-            plt.imsave(f'{step}_{args.type}.png', images_gt.squeeze(). detach().cpu().numpy())
+            # plt.imsave(f'{step}_{args.type}.png', images_gt.squeeze(). detach().cpu().numpy())
             gtview = render_turntable_mesh(mesh_gt)
 
 
             if args.type == "vox":
                 p = predictions.squeeze(0)
                 pview = render_turntable_voxelgrid(p)
+                # plt.imsave(f'{args.eval_iter}_{step}_{args.type}_view.png', pview[10])
 
       
             if args.type == "point":
@@ -196,11 +197,10 @@ def evaluate_model(args):
                 
             if args.type == "mesh":
                 pview = render_turntable_mesh(predictions)
-                # plt.imsave(f'results/q2/q26/{args.eval_iter}_{step}_{args.type}_view.png', pview[10])
                 
 
-            # imageio.mimsave(str(args.eval_iter) + '_' + str(step)+'_pred_eval.gif', pview, fps=30)
-            # imageio.mimsave(str(args.eval_iter) + '_' + str(step)+'_gt_eval.gif', gtview, fps=30)
+            imageio.mimsave(str(args.eval_iter) + '_' + str(step)+'_pred_eval.gif', pview, fps=30)
+            imageio.mimsave(str(args.eval_iter) + '_' + str(step)+'_gt_eval.gif', gtview, fps=30)
 
 
         total_time = time.time() - start_time

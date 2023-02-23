@@ -9,7 +9,12 @@ Gunjan Sethi: gunjans@andrew.cmu.edu
  - [Fitting a Voxel Grid](#q11)  
  - [Fitting a Pointcloud](#q12) 
  - [Fitting a a Mesh](#q13)
- - [Reconstructing 3D from SingleView: Image to Voxel Grid](#q23)
+ - [Reconstructing 3D from SingleView: Image to Voxel Grid](#q21)
+ - [Reconstructing 3D from SingleView: Image to Pointcloud](#q22)
+ - [Reconstructing 3D from SingleView: Image to Mesh](#q23)
+ - [Quantitative Comparisons](#q24)
+ - [Hyperparameter Variations](#q25)
+ - [Interpreting the Model](#q26)
 
 
 (#) Exploring Loss Functions
@@ -80,15 +85,15 @@ The goal is to train a single view to 3D pipeline for voxels, pointclouds and me
 
 (###) Single ConvTranspose3D Layer
 
-Trained for 10k iters with batch size 2.
+Trained for 7.5k iters with batch size 64.
 
 `nn.ConvTranspose3d(512, 1, kernel_size=32, stride=1)`
 
 | Images | Groudtruth Mesh | Predicted Vox |
 | -- | -- | -- |
-| <img src="results/140_vox.png"> | <img src="results/q2/q21/exp4/final_140_gt_eval.gif"> | <img src="results/q2/q21/exp4/final_140_pred_eval.gif"> | 
-| <img src="results/image_300_point.png"> | <img src="results/q2/q21/exp4/final_300_gt_eval_vox.gif"> | <img src="results/q2/q21/exp4/final_300_pred_eval_vox.gif"> | 
-| <img src="results/image_400_mesh.png"> | <img src="results/q2/q21/exp4/final_400_gt_eval_vox.gif"> | <img src="results/q2/q21/exp4/final_400_pred_eval_vox.gif"> | 
+| <img src="results/q2/q21/exp13/0_vox.png">    | <img src="results/q2/q21/exp14/7500_0_gt_eval.gif"> |   <img src="results/q2/q21/exp14/7500_0_pred_eval.gif"> | 
+| <img src="results/q2/q22/exp6/140_point.png"> | <img src="results/q2/q21/exp14/7500_140_gt_eval.gif"> | <img src="results/q2/q21/exp14/7500_140_pred_eval.gif"> | 
+| <img src="results/q2/q22/exp6/420_point.png"> | <img src="results/q2/q21/exp14/7500_420_gt_eval.gif"> | <img src="results/q2/q21/exp14/7500_420_pred_eval.gif"> | 
 
 
 (###) 4-Layer ConvTranspose3D Model 
@@ -120,7 +125,7 @@ self.layer4 = torch.nn.Sequential(
 | <img src="results/q2/q22/exp6/420_point.png"> | <img src="results/q2/q21/exp13/7000_420_gt_eval.gif"> | <img src="results/q2/q21/exp13/7000_420_pred_eval.gif"> | 
 
 
-(###) 4 FC Layers
+(###) 4 FC Layers [Final]
 
 Trained for 8k iterations with 64 batch size.
 
@@ -164,7 +169,7 @@ nn.Linear(512, (args.n_points * 3))
 
 
 
-(###) 3-Layer FC Decoder
+(###) 3-Layer FC Decoder [Final]
 
 Trained for 10k iters with 64 batch size.
 
@@ -193,7 +198,7 @@ nn.Sequential(
 (##) 2.3. Image to Mesh - Ablations
 
 
-(###) 3-Layer FC Decoder
+(###) 3-Layer FC Decoder [Final]
 
 Train for 7k iterations with 64 batch size. 
 
@@ -224,11 +229,27 @@ nn.Sequential(
 <a name="q24">
 (##) 2.4. Quantitative Comparisons
 
+Using simple linear layers works pretty well for all 3D representations. However, using similar
+models, voxels show a lower F1 score as compared to meshes and pointclouds.
+
+| Voxel | Pointcloud | Mesh |
+| -- | -- | -- |
+| F1_0.05: 93.043; Avg F1_0.05: 90.688 | F1_0.05: 99.760; Avg F1_.05: 96.874 | F1_0.05: 99.199; Avg F1_0.05: 95.833 |
+| <img src="results/q2/q24/eval_vox.png"> | <img src="results/q2/q24/eval_point_final.png"> | <img src="results/q2/q24/eval_mesh.png"> | 
+
 
 <a name="q25">
 (##) 2.5. Hyperparameter Variations
 
 (###) Voxel Predictions
+
+Varying batch size from 2 to 64 significantly boosted the F1 score (by 20%). Even qualitatively, the 
+models trained with 64 batch size are able to capture unique characteristics of chairs.
+
+
+| Groundtruth | Trained with batchsize = 2 | Trained with batchsize = 64 |
+| -- | -- | -- |
+| <img src="results/q2/q23/exp11/7000_140_gt_eval.gif"> | <img src="results/q2/q21/exp4/final_140_pred_eval.gif"> | <img src="results/q2/q21/exp14/7500_140_pred_eval.gif"> |  
 
 
 
@@ -258,6 +279,15 @@ trained with batch size 2.
 
 <a name="q26">
 (##) 2.6. Model Interpretation
+
+
+(###) Voxel Predictions Through Iterations
+
+
+| Sample 0 | Sample 140 |
+| -- | -- |
+| <img src="results/q2/q26/vox/q26_0_vox.gif"> | <img src="results/q2/q26/vox/q26_140_vox.gif"> |  
+
 
 (###) Mesh Deformations Through Iterations
 

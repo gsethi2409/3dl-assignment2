@@ -22,7 +22,7 @@ class SingleViewto3D(nn.Module):
             # Output: b x 32 x 32 x 32
             # TODO:
 
-            self.decoder = nn.ConvTranspose3d(512, 1, kernel_size=32, stride=1)
+            # self.decoder = nn.ConvTranspose3d(512, 1, kernel_size=32, stride=1)
             # self.decoder = nn.Conv3d(512, 1, kernel_size=32, stride=1, padding=31)
         
             # self.layer1 = torch.nn.Sequential(
@@ -41,12 +41,12 @@ class SingleViewto3D(nn.Module):
             #     torch.nn.ConvTranspose3d(8, 1, kernel_size=1),
             # )
 
-            # self.decoder = nn.Sequential(nn.Flatten(),
-            #                      nn.Linear(512, 2048),
-            #                      nn.ReLU(),
-            #                      nn.Linear(2048, 8192),
-            #                      nn.ReLU(),
-            #                      nn.Linear(8192, 32768))
+            self.decoder = nn.Sequential(nn.Flatten(),
+                                 nn.Linear(512, 2048),
+                                 nn.ReLU(),
+                                 nn.Linear(2048, 8192),
+                                 nn.ReLU(),
+                                 nn.Linear(8192, 32768))
         
         
         elif args.type == "point":
@@ -54,10 +54,10 @@ class SingleViewto3D(nn.Module):
             # Output: b x args.n_points x 3  
             self.n_point = args.n_points
 
-            # self.decoder = nn.Linear(512, (args.n_points * 3))
-            self.decoder = nn.Sequential(
-                nn.Linear(512, (args.n_points * 3))
-            )  
+            self.decoder = nn.Linear(512, (args.n_points * 3))
+            # self.decoder = nn.Sequential(
+            #     nn.Linear(512, (args.n_points * 3))
+            # )  
 
 
             # self.decoder = nn.Sequential(nn.Flatten(),
@@ -74,7 +74,7 @@ class SingleViewto3D(nn.Module):
             mesh_pred = ico_sphere(4, self.device)
             self.mesh_pred = pytorch3d.structures.Meshes(mesh_pred.verts_list()*args.batch_size, mesh_pred.faces_list()*args.batch_size)
             # TODO:
-            # self.decoder = nn.Linear(512, (mesh_pred.verts_packed().shape[0] * 3))
+            self.decoder = nn.Linear(512, (mesh_pred.verts_packed().shape[0] * 3))
 
 
             # self.decoder = nn.Sequential(nn.Flatten(),
@@ -95,8 +95,7 @@ class SingleViewto3D(nn.Module):
 
         if not args.load_feat:
             images_normalize = self.normalize(images.permute(0,3,1,2))
-            encoded_feat = self.encoder(images_normalize)
-            # .squeeze(-1).squeeze(-1) # b x 512
+            encoded_feat = self.encoder(images_normalize).squeeze(-1).squeeze(-1) # b x 512
         else:
             encoded_feat = images # in case of args.load_feat input images are pretrained resnet18 features of b x 512 size
 
